@@ -5,14 +5,15 @@ This is a sample of a rest style gateway service acting as a soap client to anot
 There needs to be a backend document retrieval service implementing the WSDL interface.
 This endpoint in turn would be made available via a service broker binding. The [Service Registry repo] (https://github.com/cf-platform-eng/service-registry-broker) as the service registry and allows services to be exposed to client apps that bind to the underlying services. The sample-doc-retrieve-gateway would act as a client of the service registry by binding to the specific backend service and getting location, credentials information of the backend service via the service registry.
 
-Steps to run the sample-doc-retrieve client:
+# Steps to run the sample-doc-retrieve client:
 
-1) Deploy the backend or simulated service. The simulated service is available at [document-service] (https://github.com/cf-platform-eng/document-service)
-2) Deploy the service-registry-broker application to CF and follow the instructions to build, deploy, make the plans and services available
-3) Build the gateway client code using `mvn clean install `, followed by app push either via a manifest.yml file or cf command line. Make sure the app is bound to the exposed service from the service registry broker
+* Deploy the backend or simulated service. The simulated service is available at [document-service] (https://github.com/cf-platform-eng/document-service)
+* Deploy the service-registry-broker application to CF and follow the instructions to build, deploy, make the plans and services available
+* Build the gateway client code using `mvn clean install `, followed by app push either via a manifest.yml file or cf command line. Make sure the app is bound to the exposed service from the service registry broker
 
-Sample:
+# Sample steps:
 
+```
 # Manifest.yml refers to the app as sample-registry-client
 cf push # Using manifest.yml
 
@@ -24,8 +25,10 @@ cf bind-service sample-registry-client EDMSRetreiveInterface-basic
 # Either restage the app if bind was done via command line or no need if manifest.yml refers to the service already
 cf restage sample-registry-client
 # Check the VCAP_SERVICES env entry to see if the credentials section got filled in with the service uri
+```
+
+# Sample output of VCAP_SERVICES on binding to a service
 cf env sample-registry-client
-# Sample output
 ```
 System-Provided:
 {
