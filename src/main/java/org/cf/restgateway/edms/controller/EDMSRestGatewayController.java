@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.cf.restgateway.edms.EDMSJaxb2Marshaller;
 import org.cf.restgateway.edms.EDMSRetrieveContentClient;
 import org.cf.restgateway.edms.wsdl.EDMSRetrieveResponseType;
 
@@ -32,7 +32,7 @@ public class EDMSRestGatewayController {
 	@Autowired
 	private ApplicationContext context;
 
-	@RequestMapping(value = "/content/{csnId}/{corrId}/{userId}/{contentId}", method=RequestMethod.GET)
+	@RequestMapping(value = "/EDMSContent/{csnId}/{corrId}/{userId}/{contentId}", method=RequestMethod.GET)
 	public ResponseEntity<Object> getContent(
 										@PathVariable("csnId")
 										String csnId,
@@ -42,7 +42,25 @@ public class EDMSRestGatewayController {
 										String userId,
 										@PathVariable("contentId")
 										String contentId) {
+		log.info("Got retrieve content request from CSN: "+ csnId
+				+ ",\n from user: " + userId
+				+ ",\n with correlation id: " + corrId
+				+ ",\n for content: " + contentId);
 
+		
+		EDMSJaxb2Marshaller marshaller = context.getBean(EDMSJaxb2Marshaller.class);
+		
+		EDMSRetrieveContentClient edmsRetrieveContentClient = new EDMSRetrieveContentClient(csnId, contentId, corrId, userId);
+		marshaller.setMarshallers(edmsRetrieveContentClient);
+		
+		EDMSRetrieveResponseType xml_response = edmsRetrieveContentClient.retrieveContent();
+		EDMSRetrieverResponse json_response = new EDMSRetrieverResponse(xml_response);
+		return new ResponseEntity<Object>(json_response, HttpStatus.OK);
+
+	}
+	
+	@RequestMapping(method = RequestMethod.POST, value = "/EDMSContent")
+	public ResponseEntity<Object> getContent(@RequestBody EDMSRetrieverRequest retrieveRequest) {
 
 		/*
 		 *
@@ -56,27 +74,25 @@ public class EDMSRestGatewayController {
 		String corrId =  "adsfa";
 		String userId = "sdfasfas";
 
-		System.setProperty("com.sun.xml.ws.transport.http.client.HttpTransportPipe.dump", "true");
-		System.setProperty("com.sun.xml.internal.ws.transport.http.client.HttpTransportPipe.dump", "true");
-		System.setProperty("com.sun.xml.ws.transport.http.HttpAdapter.dump", "true");
-		System.setProperty("com.sun.xml.internal.ws.transport.http.HttpAdapter.dump", "true");
-
 		Object response = eDMSRetrieveContentClient.getEDMSContent(csn, contentId, corrId, userId);
 		//eDMSRetrieveContentClient.(response);
-
-
 		 */
 
-		log.info("Got retrieve content request from CSN: "+ csnId
-				+ ",\n from user: " + userId
-				+ ",\n with correlation id: " + corrId
-				+ ",\n for content: " + contentId);
+		
+		log.info("Got retrieve content request from CSN: "+ retrieveRequest.getCsnId()
+				+ ",\n from user: " + retrieveRequest.getUserId()
+				+ ",\n with correlation id: " + retrieveRequest.getCorrId()
+				+ ",\n for content: " + retrieveRequest.getContentId());
 
-		EDMSRetrieveContentClient eDMSRetrieveContentClient = context.getBean(EDMSRetrieveContentClient.class);
-
-
-		EDMSRetrieveResponseType response = eDMSRetrieveContentClient.getEDMSContent(csnId, contentId, corrId, userId);
-		return new ResponseEntity<Object>(response, HttpStatus.OK);
+		
+		EDMSJaxb2Marshaller marshaller = context.getBean(EDMSJaxb2Marshaller.class);
+		
+		EDMSRetrieveContentClient edmsRetrieveContentClient = new EDMSRetrieveContentClient(retrieveRequest);
+		marshaller.setMarshallers(edmsRetrieveContentClient);
+		
+		EDMSRetrieveResponseType xml_response = edmsRetrieveContentClient.retrieveContent();
+		EDMSRetrieverResponse json_response = new EDMSRetrieverResponse(xml_response);
+		return new ResponseEntity<Object>(json_response, HttpStatus.OK);
 	}
 
 

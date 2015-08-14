@@ -2,6 +2,16 @@
 package org.cf.restgateway.edms;
 
 
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.Cloud;
@@ -14,29 +24,39 @@ import org.springframework.context.annotation.Configuration;
 @EnableAutoConfiguration
 public class EDMSRestGatewayApp {
 
-
-
-	/*
-	public static void main(String[] args) {
-		ApplicationContext ctx = SpringApplication.run(EDMSRetrieveContentConfiguration.class, args);
-
-		EDMSRetrieveContentClient eDMSRetrieveContentClient = ctx.getBean(EDMSRetrieveContentClient.class);
-
-		String csn = "AP_AMS";
-		String contentId = "57ff0c86-f947-4331-8aef-f63f03fbc3ea";
-		String corrId =  "Pivotal5";
-		String userId = "drayb";
-
-		System.setProperty("com.sun.xml.ws.transport.http.client.HttpTransportPipe.dump", "true");
-		System.setProperty("com.sun.xml.internal.ws.transport.http.client.HttpTransportPipe.dump", "true");
-		System.setProperty("com.sun.xml.ws.transport.http.HttpAdapter.dump", "true");
-		System.setProperty("com.sun.xml.internal.ws.transport.http.HttpAdapter.dump", "true");
-
-		Object response = eDMSRetrieveContentClient.getEDMSContent(csn, contentId, corrId, userId);
-		//eDMSRetrieveContentClient.(response);
+	static {
+		disableCertificateValidation();
 	}
-	*/
+	
+	public static void disableCertificateValidation() {
 
+		// Create a trust manager that does not validate certificate chains
+		TrustManager[] trustAllCerts = new TrustManager[] {
+				new X509TrustManager() {
+					public X509Certificate[] getAcceptedIssuers() {
+						return new X509Certificate[0];
+					}
+					public void checkClientTrusted(X509Certificate[] certs, String authType) {}
+					public void checkServerTrusted(X509Certificate[] certs, String authType) {}
+				} };
+
+
+		// Ignore differences between given hostname and certificate hostname
+		HostnameVerifier hv = new HostnameVerifier() {
+
+			public boolean verify(String hostname, SSLSession session) { return true; }
+
+		};
+
+		// Install the all-trusting trust manager
+		try {
+			SSLContext sc = SSLContext.getInstance("SSL");
+			sc.init(null, trustAllCerts, new SecureRandom());
+			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+			HttpsURLConnection.setDefaultHostnameVerifier(hv);
+		} catch (Exception e) {}
+
+	}
 
 	@Bean
 	public Cloud cloud() {
