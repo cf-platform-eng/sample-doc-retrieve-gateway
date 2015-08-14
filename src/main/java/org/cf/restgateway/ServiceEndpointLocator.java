@@ -77,18 +77,21 @@ public class ServiceEndpointLocator {
 		
 			JSONArray serviceDefns = service_defns_map.get(serviceBucketName);
 		
-			Map<String, ServiceEndpointDefn> associatedServiceDefns = createServiceEndpoint(serviceDefns);
+			// There would be only one service exposed under a service category for a consumer of the service
+			Map<String, ServiceEndpointDefn> associatedServiceDefns = createServiceEndpoint(serviceBucketName, serviceDefns);
 			serviceRegistryMap.put(serviceBucketName, associatedServiceDefns);
 			
 		}
 	}
 
-	public Map<String, ServiceEndpointDefn> createServiceEndpoint(JSONArray serviceDefns) {
+	public Map<String, ServiceEndpointDefn> createServiceEndpoint(String serviceBucketName, JSONArray serviceDefns) {
 		
 		Map<String, ServiceEndpointDefn> serviceEndpointMap = new Hashtable<String, ServiceEndpointDefn>();
 		
 		for(Object entry: serviceDefns) {
 			ServiceEndpointDefn serviceEndpointDefn = new ServiceEndpointDefn();
+			
+			serviceEndpointDefn.setServiceCategory(serviceBucketName);
 			
 			JSONObject serviceDefn = (JSONObject)entry;
 			
@@ -109,7 +112,7 @@ public class ServiceEndpointLocator {
 				
 			}
 			log.info("Created ServiceEndpointDefn: " + serviceEndpointDefn);
-			serviceEndpointMap.put(serviceEndpointDefn.getServiceName(), serviceEndpointDefn);
+			serviceEndpointMap.put(serviceEndpointDefn.getServiceCategory(), serviceEndpointDefn);
 			
 		}
 

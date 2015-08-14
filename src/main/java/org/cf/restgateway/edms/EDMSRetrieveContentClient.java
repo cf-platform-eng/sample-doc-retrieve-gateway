@@ -45,8 +45,7 @@ public class EDMSRetrieveContentClient extends WebServiceGatewaySupport {
 	Log log = LogFactory.getLog(EDMSRetrieveContentClient.class);
 
 	// Edit the service name as necessary.
-	// The service was created using service + plan name: hence 'EDMSRetreiveInterface-basic'
-	private static final String SERVICE_NAME = "EDMSRetreiveInterface-basic";
+	private static final String SERVICE_NAME = "EDMSRetreiveInterface";
 	
 	// Local testing
 	private static final String DEFAULT_URI = "http://document-service.10.244.0.34.xip.io/soap/RetrieveService";	

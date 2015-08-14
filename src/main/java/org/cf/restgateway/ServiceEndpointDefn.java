@@ -8,10 +8,19 @@ import org.json.simple.JSONArray;
 
 public class ServiceEndpointDefn {
 
+	private String serviceCategory;
 	private String serviceName;
 	private String servicePlan;
 	private String label;
 	private Map<String, Object> otherInfo = new Hashtable<String, Object>();
+
+	public String getServiceCategory() {
+		return serviceCategory;
+	}
+
+	public void setServiceCategory(String serviceCategory) {
+		this.serviceCategory = serviceCategory;
+	}
 	
 	public void addOtherData(String name, Object val) {
 		otherInfo.put(name, val);
@@ -97,7 +106,8 @@ public class ServiceEndpointDefn {
 
 	@Override
 	public String toString() {
-		return "ServiceEndpointDefn [serviceName=" + serviceName
+		return "ServiceEndpointDefn [serviceCategory=" + serviceCategory
+				+ ", serviceName=" + serviceName
 				+ ", servicePlan=" + servicePlan + ", label=" + label
 				+ ", otherInfo=" + otherInfo + ", tags="
 				+ Arrays.toString(tags) + ", uri=" + uri + ", username="
