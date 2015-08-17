@@ -19,11 +19,13 @@ import org.cf.restgateway.edms.controller.EDMSRestGatewayController;
 
 @Configuration
 public class EDMSJaxb2Marshaller {
+	
+	private static final String CONTEXT_PATH = "org.cf.restgateway.edms.wsdl";
 
 	@Bean
 	public Jaxb2Marshaller marshaller() {
 		Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
-		marshaller.setContextPath("org.cf.restgateway.edms.wsdl");
+		marshaller.setContextPath(CONTEXT_PATH);
 		return marshaller;
 	}	
 	

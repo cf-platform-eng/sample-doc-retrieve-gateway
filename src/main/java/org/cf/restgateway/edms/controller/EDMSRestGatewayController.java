@@ -48,16 +48,19 @@ public class EDMSRestGatewayController {
 				+ ",\n for content: " + contentId);
 
 		
-		EDMSJaxb2Marshaller marshaller = context.getBean(EDMSJaxb2Marshaller.class);
 		
-		EDMSRetrieveContentClient edmsRetrieveContentClient = new EDMSRetrieveContentClient(csnId, contentId, corrId, userId);
-		marshaller.setMarshallers(edmsRetrieveContentClient);
 		
-		EDMSRetrieveResponseType xml_response = edmsRetrieveContentClient.retrieveContent();
-		EDMSRetrieverResponse json_response = new EDMSRetrieverResponse(xml_response);
-		return new ResponseEntity<Object>(json_response, HttpStatus.OK);
-
+		EDMSRetrieveContentClient edmsRetrieveContentClient = new EDMSRetrieveContentClient(csnId, 
+																	contentId, corrId, userId);
+	
+		try {
+			return invokeEDMSRetrieveContent(edmsRetrieveContentClient);
+		} catch(Exception e) {
+			return new ResponseEntity<Object>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
+	
+
 	
 	@RequestMapping(method = RequestMethod.POST, value = "/EDMSContent")
 	public ResponseEntity<Object> getContent(@RequestBody EDMSRetrieverRequest retrieveRequest) {
@@ -84,16 +87,25 @@ public class EDMSRestGatewayController {
 				+ ",\n with correlation id: " + retrieveRequest.getCorrId()
 				+ ",\n for content: " + retrieveRequest.getContentId());
 
+		EDMSRetrieveContentClient edmsRetrieveContentClient = new EDMSRetrieveContentClient(retrieveRequest);
+		
+		try {
+			return invokeEDMSRetrieveContent(edmsRetrieveContentClient);
+		} catch(Exception e) {
+			return new ResponseEntity<Object>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	
+	}
+	
+	private ResponseEntity<Object> invokeEDMSRetrieveContent(EDMSRetrieveContentClient client) 
+			throws Exception {
 		
 		EDMSJaxb2Marshaller marshaller = context.getBean(EDMSJaxb2Marshaller.class);
+		marshaller.setMarshallers(client);
 		
-		EDMSRetrieveContentClient edmsRetrieveContentClient = new EDMSRetrieveContentClient(retrieveRequest);
-		marshaller.setMarshallers(edmsRetrieveContentClient);
-		
-		EDMSRetrieveResponseType xml_response = edmsRetrieveContentClient.retrieveContent();
+		EDMSRetrieveResponseType xml_response = client.retrieveContent();
 		EDMSRetrieverResponse json_response = new EDMSRetrieverResponse(xml_response);
 		return new ResponseEntity<Object>(json_response, HttpStatus.OK);
 	}
-
 
 }

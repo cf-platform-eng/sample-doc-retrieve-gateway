@@ -132,8 +132,6 @@ public class EDMSRetrieveContentClient extends WebServiceGatewaySupport {
 		this.corrId = corrId;
 		this.userId = userId;
 		
-		// Reset the service endpoint before the call... based on service binding
-		resetServiceEndpointUsingServiceBindings();
 	}
 	
 	public void resetServiceEndpointUsingServiceBindings() {
@@ -166,13 +164,16 @@ public class EDMSRetrieveContentClient extends WebServiceGatewaySupport {
 	
 
 	public void setMarshallers(EDMSJaxb2Marshaller configurator) {
-				
+		
 		this.setMarshaller(configurator.marshaller());
 		this.setUnmarshaller(configurator.marshaller());
 	}
 
-	public EDMSRetrieveResponseType retrieveContent() {
+	public EDMSRetrieveResponseType retrieveContent()  throws Exception {
 
+		// Reset the service endpoint before the call... based on service binding
+		resetServiceEndpointUsingServiceBindings();
+		
 		ObjectFactory of = new ObjectFactory();
 
 		EDMSRetrieveRequestType request = of.createEDMSRetrieveRequestType();
@@ -209,7 +210,6 @@ public class EDMSRetrieveContentClient extends WebServiceGatewaySupport {
 			e.printStackTrace();
 		}
 
-		//EDMSRetrieveResponseType response = (EDMSRetrieveResponseType) getWebServiceTemplate().marshalSendAndReceive(
 		JAXBElement jaxbResponse = (JAXBElement)getWebServiceTemplate().marshalSendAndReceive(
 
 				requestPayload,
@@ -227,12 +227,11 @@ public class EDMSRetrieveContentClient extends WebServiceGatewaySupport {
 			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 			System.out.println("Raw response payload:");
 			marshaller.marshal(jaxbResponse, System.out);
-		}
-		catch (Exception
-				e) {
+		} catch (Exception e) {
+			//catch exception			
+			log.error("Problem with EDMSRetrieveContent SOAP Invocation: " + e.getMessage());
 			e.printStackTrace();
-			
-			//catch exception
+			throw e;
 		}
 
 		return edmsResponse;
