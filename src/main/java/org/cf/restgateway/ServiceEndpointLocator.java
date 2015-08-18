@@ -1,10 +1,7 @@
 package org.cf.restgateway;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.json.simple.JSONArray;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -14,8 +11,9 @@ import org.apache.commons.logging.LogFactory;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.springframework.context.annotation.Configuration;
 
-
+@Configuration
 public class ServiceEndpointLocator {
 
 	public static final String URI = "uri";
@@ -29,7 +27,7 @@ public class ServiceEndpointLocator {
 	//public String serviceBucketName = "service-discovery";
 	
 	Map<String, Map<String, ServiceEndpointDefn>> serviceRegistryMap = new Hashtable<String, Map<String, ServiceEndpointDefn>>();
-	
+
 	public ServiceEndpointLocator() {
 		loadServiceDefinitions();
 	}
@@ -52,18 +50,17 @@ public class ServiceEndpointLocator {
 		return null;
 	}
 	
-	
 	public void loadServiceDefinitions() {
 		
 		String vcapServiceDefn = System.getenv(VCAP_SERVICES);
+		log.debug("VCAP_SERVICES env variable content: " + vcapServiceDefn);
 		
 		if (vcapServiceDefn == null) {
 			log.error("VCAP_SERVICES env variable not found. No Service bound to application!!");
 			return;
 		}
 		
-		@SuppressWarnings("unchecked")
-		
+		@SuppressWarnings("unchecked")		
         HashMap<String, JSONArray> service_defns_map = null;
 		
 		try {
@@ -80,7 +77,11 @@ public class ServiceEndpointLocator {
 			// There would be only one service exposed under a service category for a consumer of the service
 			Map<String, ServiceEndpointDefn> associatedServiceDefns = createServiceEndpoint(serviceBucketName, serviceDefns);
 			serviceRegistryMap.put(serviceBucketName, associatedServiceDefns);
-			
+			log.debug("Service Bucket name: "
+					+ serviceBucketName
+					+ " and associated Service Defn: "
+					+ associatedServiceDefns
+					);
 		}
 	}
 
@@ -112,7 +113,7 @@ public class ServiceEndpointLocator {
 				
 			}
 			log.info("Created ServiceEndpointDefn: " + serviceEndpointDefn);
-			serviceEndpointMap.put(serviceEndpointDefn.getServiceCategory(), serviceEndpointDefn);
+			serviceEndpointMap.put(serviceEndpointDefn.getServiceName(), serviceEndpointDefn);
 			
 		}
 

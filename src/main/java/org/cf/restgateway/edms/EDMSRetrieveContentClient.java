@@ -1,20 +1,11 @@
 
 package org.cf.restgateway.edms;
 
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.Map;
 import java.util.TimeZone;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.Marshaller;
@@ -22,16 +13,16 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.Cloud;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.oxm.jaxb.Jaxb2Marshaller;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.ws.client.core.support.WebServiceGatewaySupport;
 import org.springframework.ws.soap.client.core.SoapActionCallback;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cf.restgateway.ServiceEndpointDefn;
 import org.cf.restgateway.ServiceEndpointLocator;
-import org.cf.restgateway.edms.controller.EDMSRestGatewayController;
 import org.cf.restgateway.edms.controller.EDMSRetrieverRequest;
 import org.cf.restgateway.edms.wsdl.EDMSRequestHeader;
 import org.cf.restgateway.edms.wsdl.EDMSRetrieveRequestType;
@@ -39,7 +30,8 @@ import org.cf.restgateway.edms.wsdl.EDMSRetrieveResponseType;
 import org.cf.restgateway.edms.wsdl.ObjectFactory;
 import org.cf.restgateway.edms.wsdl.EDMSRequestHeader.UserInformation;
 
-
+@Configuration
+@Scope("prototype")
 public class EDMSRetrieveContentClient extends WebServiceGatewaySupport {
 
 	Log log = LogFactory.getLog(EDMSRetrieveContentClient.class);
@@ -50,48 +42,21 @@ public class EDMSRetrieveContentClient extends WebServiceGatewaySupport {
 	// Local testing
 	private static final String DEFAULT_URI = "http://document-service.10.244.0.34.xip.io/soap/RetrieveService";	
 
-
-	public String getCsnId() {
-		return csnId;
-	}
-
-	public void setCsnId(String csnId) {
-		this.csnId = csnId;
-	}
-
-
-	public String getContentId() {
-		return contentId;
-	}
-
-	public void setContentId(String contentId) {
-		this.contentId = contentId;
-	}
-
-	public String getCorrId() {
-		return corrId;
-	}
-
-	public void setCorrId(String corrId) {
-		this.corrId = corrId;
-	}
-
-	public String getUserId() {
-		return userId;
-	}
-
-	public void setUserId(String userId) {
-		this.userId = userId;
-	}
+	@Autowired
+	Cloud cloud;
 
 	@Autowired
 	private ApplicationContext context;
 	
+	@Autowired
+	ServiceEndpointLocator serviceEndpointLocator;
+
 	private String csnId; 
 	private String contentId;
 	private String corrId;
 	private String userId;
-
+	
+	private EDMSRetrieverRequest retrieverRequest;
 
 	public XMLGregorianCalendar convertStringToXmlGregorian(String dateString)
 	{
@@ -115,23 +80,17 @@ public class EDMSRetrieveContentClient extends WebServiceGatewaySupport {
 		// TODO Auto-generated constructor stub
 	}
 
-	public EDMSRetrieveContentClient(EDMSRetrieverRequest requestPayload) {
-		this( 	
-				requestPayload.getCsnId(),
-				requestPayload.getContentId(), 
-				requestPayload.getCorrId(), 
-				requestPayload.getUserId()
-			);
+	public void setRequestPayload(EDMSRetrieverRequest requestPayload) {
+		retrieverRequest = requestPayload;
 	}
 	
 	
-	public EDMSRetrieveContentClient(String csnId, String contentId, String corrId, String userId) {
-		super();
-		this.csnId = csnId;
-		this.contentId = contentId;
-		this.corrId = corrId;
-		this.userId = userId;
+	public void setRequestPayload(String csnId, String contentId, String corrId, String userId) {
 		
+		retrieverRequest = new EDMSRetrieverRequest(csnId,
+													contentId,
+													corrId,
+													userId);
 	}
 	
 	public void resetServiceEndpointUsingServiceBindings() {
@@ -143,13 +102,23 @@ public class EDMSRetrieveContentClient extends WebServiceGatewaySupport {
 		String certFormat = "";
 		String certLocation = "";
 		
-		log.info("Trying to override service endpoint using service binding, looking for service: " + SERVICE_NAME);
-		ServiceEndpointLocator serviceEndpointLocator = new ServiceEndpointLocator();
-		ServiceEndpointDefn serviceEndpointDefn = serviceEndpointLocator.lookupServiceEndpointDefnByName(SERVICE_NAME);
+		log.debug("Trying to override service endpoint using service binding,"
+					+ "looking for service: " + SERVICE_NAME);
 		
+		Map<String, ServiceEndpointDefn> boundServiceEndpointDefsMap = serviceEndpointLocator.lookupServiceDefinitionsByCategory(SERVICE_NAME);
+
+		// If there are multiple services bound all in the same service category/bucket, return the first one.
+		// This can occur in cases like we have a service broker that returns SSL Certs for various services but puts them all under the same service category
+		// But for the case of service registry, there would be only one service bound under a category,
+		// like EDMS category would have only one instance of a service (based on plan or space).
+		
+		ServiceEndpointDefn serviceEndpointDefn = null;
+		if (boundServiceEndpointDefsMap.size() > 0 ) {
+			serviceEndpointDefn = boundServiceEndpointDefsMap.entrySet().iterator().next().getValue();
+		}
 		
 		if (serviceEndpointDefn != null) {
-			System.out.println("Defn Found!!:" + serviceEndpointDefn);
+			log.debug("Defn Found!!:" + serviceEndpointDefn);
 	
 			// Override the uri based on the service uri endpoint defined in VCAP_SERVICES
 			uri = serviceEndpointDefn.getUri();
@@ -162,9 +131,7 @@ public class EDMSRetrieveContentClient extends WebServiceGatewaySupport {
 		this.setDefaultUri(uri);
 	}
 	
-
 	public void setMarshallers(EDMSJaxb2Marshaller configurator) {
-		
 		this.setMarshaller(configurator.marshaller());
 		this.setUnmarshaller(configurator.marshaller());
 	}
@@ -180,23 +147,19 @@ public class EDMSRetrieveContentClient extends WebServiceGatewaySupport {
 
 		EDMSRequestHeader header = of.createEDMSRequestHeader();
 		request.setEDMSRequestHeader(header);
-		header.setConsumerSourceName(csnId);
-		header.setCorrelationId(corrId);
+		header.setConsumerSourceName(retrieverRequest.getCsnId());
+		header.setCorrelationId(retrieverRequest.getCorrId());
 		header.setVerboseCode(true);
 
 		UserInformation userInfo = of.createEDMSRequestHeaderUserInformation();
-		userInfo.setUserId(userId);
+		userInfo.setUserId(retrieverRequest.getUserId());
 		header.setUserInformation(userInfo);
 
-
 		header.setRequestTimestamp(convertStringToXmlGregorian(new Date().toString()));
-		request.setContentId(contentId);
+		request.setContentId(retrieverRequest.getContentId());
 
 		JAXBElement<EDMSRetrieveRequestType> requestPayload = of.createEDMSRetrieveRequest(request);
-
-		System.out.println();
-		System.out.println("Requesting Content with Id " + contentId + " using request payload:" + requestPayload);
-
+		log.debug("Requesting Content with Id " + contentId + " using request payload");
 
 		try {
 			JAXBContext ctx = JAXBContext.newInstance(EDMSRetrieveRequestType.class);
@@ -217,19 +180,20 @@ public class EDMSRetrieveContentClient extends WebServiceGatewaySupport {
 						"EDMS/Retrieve"
 						));
 
-
 		EDMSRetrieveResponseType edmsResponse = (EDMSRetrieveResponseType)jaxbResponse.getValue();
-		System.out.println("Got response : " + edmsResponse);
-
+		
 		try {
 			JAXBContext ctx = JAXBContext.newInstance(EDMSRetrieveResponseType.class);
 			Marshaller marshaller = ctx.createMarshaller();
 			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-			System.out.println("Raw response payload:");
+			System.out.println("Response payload:");
 			marshaller.marshal(jaxbResponse, System.out);
 		} catch (Exception e) {
 			//catch exception			
-			log.error("Problem with EDMSRetrieveContent SOAP Invocation: " + e.getMessage());
+			log.error("Problem with reading EDMSRetrieveContent SOAP Response: "							
+							+ edmsResponse
+							+ ", error: " + e.getMessage() );
+			
 			e.printStackTrace();
 			throw e;
 		}

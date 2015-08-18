@@ -23,10 +23,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
+		<!-- 
  		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
+		 -->
        <dependency>
             <groupId>org.springframework.ws</groupId>
             <artifactId>spring-ws-core</artifactId>
@@ -52,19 +54,7 @@
 			<artifactId>spring-boot-starter-data-rest</artifactId>
 		</dependency>
 
- 		<!-- Hibernate -->
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-entitymanager</artifactId>
-			<version>${hibernate.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.hsqldb</groupId>
-			<artifactId>hsqldb</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-
-         <dependency>
+        <dependency>
             <groupId>com.googlecode.json-simple</groupId>
             <artifactId>json-simple</artifactId>
             <version>1.1.1</version>
@@ -99,19 +89,6 @@
                     <schemaIncludes>
 			          <include>*.wsdl</include>
 			        </schemaIncludes>
-
-
-
-                    <!--
-
-                    <schemas>
-                        <schema>
-                        	<url>file:////Users/sparameswaran/Downloads/gs-consuming-web-service-master/complete/src/main/resources/EDMSRetrieve-HTTP.wsdl</url>
-
-
-                        </schema>
-                    </schemas>
-                    -->
 
                 </configuration>
             </plugin>

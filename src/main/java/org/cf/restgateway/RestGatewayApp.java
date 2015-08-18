@@ -1,5 +1,5 @@
 
-package org.cf.restgateway.edms;
+package org.cf.restgateway;
 
 
 import java.security.SecureRandom;
@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ComponentScan
 @EnableAutoConfiguration
-public class EDMSRestGatewayApp {
+public class RestGatewayApp {
 
 	static {
 		disableCertificateValidation();
@@ -67,7 +67,7 @@ public class EDMSRestGatewayApp {
 	}
 
 	public static void main(String[] args) {
-		SpringApplication.run(EDMSRestGatewayApp.class, args);
+		SpringApplication.run(RestGatewayApp.class, args);
 	}
 }
 

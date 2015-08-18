@@ -30,6 +30,9 @@ public class EDMSRestGatewayController {
 	Cloud cloud;
 
 	@Autowired
+	private EDMSJaxb2Marshaller marshaller;
+
+	@Autowired
 	private ApplicationContext context;
 
 	@RequestMapping(value = "/EDMSContent/{csnId}/{corrId}/{userId}/{contentId}", method=RequestMethod.GET)
@@ -42,7 +45,7 @@ public class EDMSRestGatewayController {
 										String userId,
 										@PathVariable("contentId")
 										String contentId) {
-		log.info("Got retrieve content request from CSN: "+ csnId
+		log.debug("Got retrieve content request from CSN: "+ csnId
 				+ ",\n from user: " + userId
 				+ ",\n with correlation id: " + corrId
 				+ ",\n for content: " + contentId);
@@ -50,9 +53,8 @@ public class EDMSRestGatewayController {
 		
 		
 		
-		EDMSRetrieveContentClient edmsRetrieveContentClient = new EDMSRetrieveContentClient(csnId, 
-																	contentId, corrId, userId);
-	
+		EDMSRetrieveContentClient edmsRetrieveContentClient = context.getBean(EDMSRetrieveContentClient.class);
+		edmsRetrieveContentClient.setRequestPayload(csnId, contentId, corrId, userId);
 		try {
 			return invokeEDMSRetrieveContent(edmsRetrieveContentClient);
 		} catch(Exception e) {
@@ -66,8 +68,6 @@ public class EDMSRestGatewayController {
 	public ResponseEntity<Object> getContent(@RequestBody EDMSRetrieverRequest retrieveRequest) {
 
 		/*
-		 *
-		 *
 		ApplicationContext ctx = SpringApplication.run(EDMSRetrieveContentConfiguration.class, args);
 
 		EDMSRetrieveContentClient eDMSRetrieveContentClient = ctx.getBean(EDMSRetrieveContentClient.class);
@@ -82,12 +82,13 @@ public class EDMSRestGatewayController {
 		 */
 
 		
-		log.info("Got retrieve content request from CSN: "+ retrieveRequest.getCsnId()
+		log.debug("Got retrieve content request from CSN: "+ retrieveRequest.getCsnId()
 				+ ",\n from user: " + retrieveRequest.getUserId()
 				+ ",\n with correlation id: " + retrieveRequest.getCorrId()
 				+ ",\n for content: " + retrieveRequest.getContentId());
 
-		EDMSRetrieveContentClient edmsRetrieveContentClient = new EDMSRetrieveContentClient(retrieveRequest);
+		EDMSRetrieveContentClient edmsRetrieveContentClient = context.getBean(EDMSRetrieveContentClient.class);
+		edmsRetrieveContentClient.setRequestPayload(retrieveRequest);
 		
 		try {
 			return invokeEDMSRetrieveContent(edmsRetrieveContentClient);
@@ -100,7 +101,6 @@ public class EDMSRestGatewayController {
 	private ResponseEntity<Object> invokeEDMSRetrieveContent(EDMSRetrieveContentClient client) 
 			throws Exception {
 		
-		EDMSJaxb2Marshaller marshaller = context.getBean(EDMSJaxb2Marshaller.class);
 		marshaller.setMarshallers(client);
 		
 		EDMSRetrieveResponseType xml_response = client.retrieveContent();

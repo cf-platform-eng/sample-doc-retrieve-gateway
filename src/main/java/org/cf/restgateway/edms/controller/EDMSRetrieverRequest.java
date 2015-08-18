@@ -14,7 +14,7 @@ public class EDMSRetrieverRequest {
 	private final String userId;
 	private final String contentId;
     
-    EDMSRetrieverRequest(@JsonProperty("csn_id") String csnId, @JsonProperty("corr_id") String corrId,
+    public EDMSRetrieverRequest(@JsonProperty("csn_id") String csnId, @JsonProperty("corr_id") String corrId,
                    @JsonProperty("user_id") String userId, @JsonProperty("content_id") String contentId) {
         Assert.notNull(csnId);
         Assert.notNull(contentId);
