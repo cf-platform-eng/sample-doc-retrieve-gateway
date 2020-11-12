@@ -1,3 +1,5 @@
+# sample-doc-retrieve-gateway is no longer actively maintained by VMware.
+
 # sample-doc-retrieve-gateway
 
 This is a sample of a rest style gateway service acting as a soap client to another existing backend service. Information about the backend service is retrieved via a service registry broker and the app parses the VCAP_SERVICES env variable to arrive at the endpoint of its related service.
